@@ -1,0 +1,52 @@
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableLambda, RunnableParallel
+from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+load_dotenv()
+
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+
+# Prompt with variables
+message = [
+    ("system", "you are an expert reviewer"),
+    ("human", "tell me the main features of the product {prod_name}")
+]
+
+prompt = ChatPromptTemplate.from_messages(message)
+
+# Functions to create prompts for pros/cons
+def analyze_pros(features):
+    pros_temp = ChatPromptTemplate.from_messages([
+        ("system", "you are an expert reviewer"),
+        ("human", "given these features: {features}, list the pros")
+    ])
+    return pros_temp.format_prompt(features=features)
+
+def analyze_cons(features):
+    cons_temp = ChatPromptTemplate.from_messages([
+        ("system", "you are an expert reviewer"),
+        ("human", "given these features: {features}, list the cons")
+    ])
+    return cons_temp.format_prompt(features=features)
+
+# Combine final output
+def combine_pros_cons(x):
+    pros = x["pros"].content
+    cons = x["cons"].content
+    return f"Pros:\n{pros}\n\nCons:\n{cons}"
+
+# Create branches
+pros_branch = analyze_pros | llm
+cons_branch = analyze_cons | llm
+
+# Run both parallel
+parallel_branches = RunnableParallel(pros=pros_branch, cons=cons_branch)
+
+# Full chain
+chain = prompt | llm | parallel_branches | RunnableLambda(combine_pros_cons)
+
+# Invoke the chain
+result = chain.invoke({"prod_name": "Hp Omen 16"})
+
+print(result)
