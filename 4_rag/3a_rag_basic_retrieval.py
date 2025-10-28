@@ -3,7 +3,7 @@ import os
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 
 current_dir=os.path.dirname(os.path.abspath(__file__))
-per_dir=os.path.join(current_dir,"db","chroma_db")
+per_dir=os.path.join(current_dir,"db","chroma_db_metadata")
 
 
 
@@ -14,12 +14,20 @@ db=Chroma(
         embedding_function=embeddings
     )
 
-query="who is Odysseus wife?"
+query="who was Odyssey?"
+
+# retriever=db.as_retriever(
+#     search_type="similarity_score_threshold",   # THIS IS ALREADY THE EMBEDDING RETRIEVAL 
+#     search_kwargs={"k":1,"score_threshold":0.1},
+# )
 
 retriever=db.as_retriever(
-    search_type="similarity_score_threshold",
-    search_kwargs={"k":10,"score_threshold":0.1},
+    search_type="similarity",   # THIS IS ALREADY THE EMBEDDING RETRIEVAL 
+    search_kwargs={"k":3},
 )
+
+
+
 
 relevent_docs=retriever.invoke(query)
 
