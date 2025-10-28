@@ -22,8 +22,8 @@ query="who was Odyssey?"
 # )
 
 retriever=db.as_retriever(
-    search_type="similarity",   # THIS IS ALREADY THE EMBEDDING RETRIEVAL 
-    search_kwargs={"k":3},
+    search_type="mmr",   # THIS IS ALREADY THE EMBEDDING RETRIEVAL 
+    search_kwargs={"k":3,"fetch_k":10},
 )
 
 
